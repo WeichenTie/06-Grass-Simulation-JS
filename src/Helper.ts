@@ -1,7 +1,10 @@
 import { makeNoise2D } from "fast-simplex-noise";
+import { inverseLerp } from "three/src/math/MathUtils.js";
 const noise = makeNoise2D();
 const heightMapCache: any = {};
 
+let _max = -Infinity;
+let _min = Infinity;
 export function getHeight(x: number, y: number) {
   const lacunarity = 1;
   const persistence = 0.75;
@@ -22,4 +25,15 @@ export function getHeight(x: number, y: number) {
   }
 
   return height;
+}
+
+export function getNormalisedHeight(x: number, y: number) {
+  return inverseLerp(_min, _max, getHeight(x, y));
+}
+
+export function setMax(max: number) {
+  _max = max;
+}
+export function setMin(min: number) {
+  _min = min;
 }

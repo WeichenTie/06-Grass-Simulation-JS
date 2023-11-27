@@ -9,7 +9,7 @@ import {
   Triangle,
 } from "three";
 import { inverseLerp } from "three/src/math/MathUtils.js";
-import { getHeight } from "./Helper";
+import { getHeight, setMax, setMin } from "./Helper";
 
 export function buildTerrain(
   width: number,
@@ -36,6 +36,8 @@ export function buildTerrain(
       minHeight = Math.min(minHeight, hCoord);
     }
   }
+  setMin(minHeight);
+  setMax(maxHeight);
   // Normalise heights
   for (let i = 0; i < ySegments * xSegments; i++) {
     vertices[i * 3 + 2] = inverseLerp(
