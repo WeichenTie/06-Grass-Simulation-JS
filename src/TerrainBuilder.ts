@@ -15,23 +15,23 @@ export function buildTerrain(
   width: number,
   height: number,
   xSegments: number,
-  ySegments: number
+  zSegments: number
 ) {
   const vertices = [];
   const indices = [];
 
   const xSegmentLength = width / xSegments;
-  const ySegmentLength = height / ySegments;
+  const zSegmentLength = height / zSegments;
 
   let maxHeight = -Infinity;
   let minHeight = Infinity;
   // Get all coords
-  for (let y = 0; y < ySegments; y++) {
+  for (let z = 0; z < zSegments; z++) {
     for (let x = 0; x < xSegments; x++) {
       const xCoord = x * xSegmentLength - width / 2;
-      const yCoord = y * ySegmentLength - height / 2;
-      const hCoord = getHeight(xCoord, yCoord);
-      vertices.push(xCoord, yCoord, hCoord);
+      const zCoord = z * zSegmentLength - height / 2;
+      const hCoord = getHeight(xCoord, zCoord);
+      vertices.push(xCoord, hCoord, zCoord);
       maxHeight = Math.max(maxHeight, hCoord);
       minHeight = Math.min(minHeight, hCoord);
     }
@@ -39,15 +39,15 @@ export function buildTerrain(
   setMin(minHeight);
   setMax(maxHeight);
   // Normalise heights
-  for (let i = 0; i < ySegments * xSegments; i++) {
-    vertices[i * 3 + 2] = inverseLerp(
+  for (let i = 0; i < zSegments * xSegments; i++) {
+    vertices[i * 3 + 1] = inverseLerp(
       minHeight,
       maxHeight,
-      vertices[i * 3 + 2]
+      vertices[i * 3 + 1]
     );
   }
 
-  for (let y = 0; y < ySegments - 1; y++) {
+  for (let y = 0; y < zSegments - 1; y++) {
     for (let x = 0; x < xSegments - 1; x++) {
       // Calculate indices
       const tl = x + y * xSegments;

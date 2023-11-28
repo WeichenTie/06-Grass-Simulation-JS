@@ -1,6 +1,6 @@
 import { makeNoise2D } from "fast-simplex-noise";
 import { inverseLerp } from "three/src/math/MathUtils.js";
-const noise = makeNoise2D();
+const noise = makeNoise2D(() => 1);
 const heightMapCache: any = {};
 
 let _max = -Infinity;
