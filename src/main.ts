@@ -3,9 +3,10 @@ import { AmbientLight, Vector3, Color } from "three";
 import { buildTerrain } from "./TerrainBuilder";
 import { toTrianglesDrawMode } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { getHeight, getNormalisedHeight } from "./Helper";
+import { GrassShaderMaterial } from "./GrassShaderMaterial";
 
-const TERRAIN_W = 5;
-const TERRAIN_H = 5;
+const TERRAIN_W = 20;
+const TERRAIN_H = 20;
 
 const width = window.innerWidth,
   height = window.innerHeight;
@@ -16,8 +17,8 @@ renderer.setAnimationLoop(animation);
 document.body.appendChild(renderer.domElement);
 
 const camera = new THREE.PerspectiveCamera(70, width / height, 0.01, 3500);
-camera.position.y = 0.5;
-camera.position.z = 2;
+camera.position.y = 1.6;
+camera.position.z = 5;
 camera.lookAt(new Vector3(0, 0, 0));
 
 const scene = new THREE.Scene();
@@ -28,7 +29,7 @@ const terrain = buildTerrain(TERRAIN_W, TERRAIN_H, 100, 100);
 terrainGeometry.setIndex(terrain.indices);
 terrainGeometry.setAttribute(
   "position",
-  new THREE.BufferAttribute(terrain.vertices, 3)
+  new THREE.BufferAttribute(terrain.vertices, 3),
 );
 terrainGeometry.computeVertexNormals();
 const terrainMaterial = new THREE.MeshLambertMaterial();
@@ -46,6 +47,7 @@ function grassBuilder(sections: number, width: number, height: number) {
   const v0 = [-width / 2, 0, 0];
   const verts = [];
   const normals = [];
+  const indices = [];
   for (let i = 0; i < sections + 1; i++) {
     verts.push(
       //t1
@@ -55,46 +57,53 @@ function grassBuilder(sections: number, width: number, height: number) {
       // t2
       v0[0] + width,
       v0[1] + sectionHeight * i,
-      v0[2]
+      v0[2],
     );
-    normals.push(0, 0, -1, 0, 0, 1);
+    normals.push(0, 0, 1, 0, 0, 1);
   }
   verts.push(
     //t1
     0,
     height,
-    v0[2]
+    v0[2],
   );
+  for (let i = 0; i < sections * 2 - 1; i++) {
+    indices.push(i, i + 1, i + 2);
+    indices.push(i + 1, i + 3, i + 2);
+  }
+  indices.push(sections * 2, sections * 2 + 1, sections * 2 + 2);
+
+  
   normals.push(0, 0, 1, 0, 0, 1);
   return {
     positions: new Float32Array(verts),
     normals: new Float32Array(normals),
+    indices,
   };
 }
 
-const GRASS_LIMIT = 10000;
-const grassGeometryBuffer = new THREE.BufferGeometry();
-const grassBlade = grassBuilder(5, 0.005, 0.1);
-grassGeometryBuffer.setAttribute(
+const GRASS_LIMIT = 100000;
+const grassGeometry = new THREE.BufferGeometry();
+const grassBlade = grassBuilder(5, 0.05, 0.5);
+
+grassGeometry.setIndex(grassBlade.indices);
+grassGeometry.setAttribute(
   "position",
-  new THREE.BufferAttribute(grassBlade.positions, 3)
+  new THREE.BufferAttribute(grassBlade.positions, 3),
 );
-grassGeometryBuffer.setAttribute(
+grassGeometry.setAttribute(
   "normal",
-  new THREE.BufferAttribute(grassBlade.normals, 3)
+  new THREE.BufferAttribute(grassBlade.normals, 3),
 );
 
-const grassGeometry = toTrianglesDrawMode(
-  grassGeometryBuffer,
-  THREE.TriangleStripDrawMode
-);
 grassGeometry.rotateX(-Math.PI / 2);
-const grassMaterial = new THREE.MeshLambertMaterial();
+grassGeometry.computeVertexNormals();
+const grassMaterial = GrassShaderMaterial();
 grassMaterial.side = THREE.DoubleSide;
 const grassMesh = new THREE.InstancedMesh(
   grassGeometry,
   grassMaterial,
-  GRASS_LIMIT
+  GRASS_LIMIT,
 );
 
 for (let i = 0; i < GRASS_LIMIT; i++) {
@@ -109,8 +118,10 @@ terrainMesh.add(grassMesh);
 // Lighting
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.translateY(50);
+directionalLight.translateX(10);
+directionalLight.translateZ(10);
 scene.add(directionalLight);
-const ambient = new AmbientLight(1);
+const ambient = new AmbientLight(0xffffff, 1);
 scene.add(ambient);
 scene.add(terrainMesh);
 
@@ -118,5 +129,7 @@ scene.add(terrainMesh);
 scene.background = new Color(0x6495ed);
 function animation(time: number) {
   renderer.render(scene, camera);
+  // terrainMesh.rotateZ(0.001);
+  grassMaterial.uniforms.uTime.value = time;
   //mesh.translateX(0.05 * Math.sin(0.001 * time));
 }

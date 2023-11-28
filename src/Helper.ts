@@ -6,8 +6,8 @@ const heightMapCache: any = {};
 let _max = -Infinity;
 let _min = Infinity;
 export function getHeight(x: number, y: number) {
-  const lacunarity = 1;
-  const persistence = 0.75;
+  const lacunarity = 20;
+  const persistence = 0.5;
   const scale = 3;
   const xCache = heightMapCache[x];
   if (xCache) {
